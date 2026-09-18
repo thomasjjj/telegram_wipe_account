@@ -118,3 +118,6 @@
   successful revocation requests do not prove erasure from every participant's view.
 - Remote run 35329839048 passed all six platform/Python combinations with 60 tests,
   Ruff checks and formatting for the final functional change (3b8a3c8).
+- Reconciled acceptance table with the completed live run and current test suite.
+  Requested a content-free confirmation from another participant's client; this
+  is the remaining live observation unavailable from the authenticated session.
