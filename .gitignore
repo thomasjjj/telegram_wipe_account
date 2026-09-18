@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+*.session*
+state/*
+!state/.gitkeep
+*.log
+__pycache__/
+.venv/
+.idea/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
