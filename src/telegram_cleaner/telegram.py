@@ -29,6 +29,7 @@ async def flood_wait(exc: errors.FloodWaitError, report: Report) -> None:
     seconds = exc.seconds + random.uniform(1, 3)
     report(f"Telegram requested a {exc.seconds}-second flood wait; pausing before retry.")
     await asyncio.sleep(seconds)
+    report("Flood wait complete; retrying Telegram request.")
 
 
 async def request(call: Callable[[], Awaitable[T]], report: Report) -> T:

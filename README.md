@@ -110,6 +110,15 @@ invalid batches split to isolate bad IDs. Permission failures skip that dialog,
 authentication failures stop the run, and unexpected failures preserve the checkpoint.
 No parallel workers, account rotation or flood-wait bypasses are used.
 
+Group/channel inventory uses Telegram's sender-filtered search (`from_user=me`),
+so a large group normally returns only your messages, not everybody's history.
+If Telegram rejects that search, the CLI explicitly reports a slower full-history
+fallback. Private `both` mode inventories all messages to clear both participants'
+messages. Telegram ignores sender filters in user-to-user dialogs, so Telethon
+filters locally for private `own` mode and bot conversations. Those scans can take
+longer. The API returns message records, but this tool examines only targeting
+metadata and stores IDs; it does not display or log message text or download media.
+
 Additional options: `--no-archived`, `--batch-size 1..100`, `--verbose`, and
 `--state-dir PATH`. Run `telegram-cleaner --help` for all flags. Flags configure the
 workflow, but destructive runs still require interactive confirmation.
@@ -138,6 +147,16 @@ chat titles, IDs and relationships. Session files grant account access: protect 
 like passwords. `.env`, sessions, logs and state files are Git-ignored. Use OS account
 permissions or disk encryption, especially on shared machines. Run one cleaner
 process per Telegram session/job at a time.
+
+## Runtime feedback
+
+The terminal shows the current phase and dialog progress, elapsed time, processing
+rate and estimated remaining time when a total is available. Discovery and message
+scans can have unknown totals: their activity remains visible without claiming an
+exact completion percentage. Deletion uses the confirmed pending-message count.
+Estimates are approximate; chat sizes and Telegram-imposed waits can change them.
+Flood waits are displayed explicitly. When output is redirected, periodic status
+lines replace the continuously refreshed display so logs remain readable.
 
 ## Development and validation
 

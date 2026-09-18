@@ -13,11 +13,19 @@ from .deleter import delete_dialog
 from .dialogs import discover, in_scope
 from .logging_utils import configure
 from .models import Job
+from .progress import LiveProgress, ProgressEvent
 from .scanner import scan
 from .state import load, new_job, new_path, save
 from .telegram import build_client, request
 
 console = Console(markup=False, highlight=False)
+
+
+def safe_console_output() -> None:
+    """Preserve redirected Windows output even for names outside its code page."""
+    reconfigure = getattr(console.file, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(errors="backslashreplace")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -88,9 +96,12 @@ def choose_resume(directory: Path, account_id: int) -> Path | None:
 
 
 async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
+    safe_console_output()
     logger = configure(args.state_dir, args.verbose)
+    feedback = LiveProgress(console)
 
     def report(message: str) -> None:
+        feedback.status(message)
         console.print(message)
         logger.info(message)
 
@@ -136,33 +147,52 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
     checkpoint()
     console.print(f"Checkpoint: {path}")
     try:
-        peers = await discover(client, me, job, report)
-        checkpoint()
-        for dialog in job.dialogs.values():
-            if not in_scope(dialog.kind, job.scope):
-                raise ValueError("Checkpoint contains a dialog outside its scope")
-            try:
-                if dialog.peer_id not in peers:
-                    peers[dialog.peer_id] = await request(
-                        lambda peer_id=dialog.peer_id: client.get_input_entity(peer_id), report
+        with feedback:
+            peers = await discover(client, me, job, report, feedback)
+            checkpoint()
+            for index, dialog in enumerate(job.dialogs.values(), 1):
+                feedback(
+                    ProgressEvent(
+                        "Scoping dialogs",
+                        index - 1,
+                        len(job.dialogs),
+                        detail=f"dialog {index}/{len(job.dialogs)} ({dialog.kind.value})",
+                        overall=True,
                     )
-                if args.dry_run or not dialog.scan_complete:
-                    report(f"Scanning {dialog.kind.value} peer {dialog.peer_id}")
-                    await scan(
-                        client,
-                        me,
-                        peers[dialog.peer_id],
-                        dialog,
-                        job.private_mode,
-                        checkpoint,
-                        report,
-                    )
-            except errors.UnauthorizedError:
-                raise
-            except (errors.RPCError, OSError, ValueError) as exc:
-                dialog.scan_complete = False
-                dialog.last_error = type(exc).__name__
-                checkpoint()
+                )
+                if not in_scope(dialog.kind, job.scope):
+                    raise ValueError("Checkpoint contains a dialog outside its scope")
+                try:
+                    if dialog.peer_id not in peers:
+                        peers[dialog.peer_id] = await request(
+                            lambda peer_id=dialog.peer_id: client.get_input_entity(peer_id), report
+                        )
+                    if args.dry_run or not dialog.scan_complete:
+                        await scan(
+                            client,
+                            me,
+                            peers[dialog.peer_id],
+                            dialog,
+                            job.private_mode,
+                            checkpoint,
+                            report,
+                            feedback,
+                        )
+                except errors.UnauthorizedError:
+                    raise
+                except (errors.RPCError, OSError, ValueError) as exc:
+                    dialog.scan_complete = False
+                    dialog.last_error = type(exc).__name__
+                    checkpoint()
+            feedback(
+                ProgressEvent(
+                    "Scoping dialogs",
+                    len(job.dialogs),
+                    len(job.dialogs),
+                    finished=True,
+                    overall=True,
+                )
+            )
         inventory(job)
         if args.dry_run:
             console.print(f"Inventory saved: {path}. No deletion requests sent.")
@@ -188,19 +218,39 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
             return 0
         job.status = "deleting"
         checkpoint()
-        for dialog in job.dialogs.values():
-            if dialog.scan_complete and not dialog.verified:
-                await delete_dialog(
-                    client,
-                    me,
-                    peers[dialog.peer_id],
-                    dialog,
-                    job.private_mode,
-                    args.batch_size,
-                    not args.no_verify,
-                    checkpoint,
-                    report,
+        with feedback:
+            for index, dialog in enumerate(job.dialogs.values(), 1):
+                feedback(
+                    ProgressEvent(
+                        "Cleaning dialogs",
+                        index - 1,
+                        len(job.dialogs),
+                        detail=f"dialog {index}/{len(job.dialogs)} ({dialog.kind.value})",
+                        overall=True,
+                    )
                 )
+                if dialog.scan_complete and not dialog.verified:
+                    await delete_dialog(
+                        client,
+                        me,
+                        peers[dialog.peer_id],
+                        dialog,
+                        job.private_mode,
+                        args.batch_size,
+                        not args.no_verify,
+                        checkpoint,
+                        report,
+                        feedback,
+                    )
+            feedback(
+                ProgressEvent(
+                    "Cleaning dialogs",
+                    len(job.dialogs),
+                    len(job.dialogs),
+                    finished=True,
+                    overall=True,
+                )
+            )
         complete = job.discovery_complete and all(d.delete_complete for d in job.dialogs.values())
         verified = complete and all(d.verified for d in job.dialogs.values())
         job.status = "complete" if verified else "incomplete"
@@ -244,6 +294,7 @@ async def run(args: argparse.Namespace) -> int:
 
 
 def main() -> None:
+    safe_console_output()
     args = parser().parse_args()
     try:
         code = asyncio.run(run(args))

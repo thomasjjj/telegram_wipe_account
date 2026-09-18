@@ -35,4 +35,10 @@ it does not promise removal of the empty chat-list entry or server metadata.
 
 Remote CI run 35326684111 passed all six Windows/Linux × Python 3.11/3.12/3.13 jobs
 for final implementation commit a596b96, including all 41 tests and lint/format checks.
-The user will run the disposable-account manual checks locally; results are pending.
+Follow-up: user supplied credentials locally and completed interactive sign-in.
+Live inventory covered all discovered dialogs without scan/discovery errors or
+fallbacks and respected observed flood waits. A final-table Windows encoding error
+was fixed and rendering verified against that saved inventory without viewing
+message contents. No live deletion occurred; both-client deletion validation
+remains pending. Progress feedback and auth migration coverage raise the local
+automated suite to 52 tests; see progress.md for ongoing CI results.

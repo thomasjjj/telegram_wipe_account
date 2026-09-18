@@ -5,6 +5,7 @@ from typing import Any
 from telethon import errors, types
 
 from .models import DialogInventory, DialogKind
+from .progress import ProgressCallback, ProgressEvent, quiet_progress
 from .telegram import Report, flood_wait
 
 
@@ -26,6 +27,8 @@ async def scan(
     private_mode: str,
     checkpoint: Callable[[], None],
     report: Report,
+    progress: ProgressCallback = quiet_progress,
+    phase: str = "Scanning messages",
 ) -> set[int]:
     """Checkpoint IDs while scanning; never persist text or media."""
     full = dialog.kind == DialogKind.SELF or (
@@ -36,6 +39,15 @@ async def scan(
     known = set(dialog.message_ids)
     offset = 0
     retries = 0
+    examined = 0
+    search_mode = "full history"
+    if filtered:
+        search_mode = (
+            "local sender filter"
+            if dialog.kind in {DialogKind.PRIVATE, DialogKind.BOT}
+            else "server sender search"
+        )
+    progress(ProgressEvent(phase, detail=search_mode))
     dialog.scan_complete = False
     dialog.last_error = None
     while True:
@@ -44,6 +56,7 @@ async def scan(
             if filtered:
                 kwargs["from_user"] = me
             async for message in client.iter_messages(peer, **kwargs):
+                examined += 1
                 offset = message.id
                 if eligible(message, me.id, dialog.kind, private_mode):
                     found.add(message.id)
@@ -52,6 +65,11 @@ async def scan(
                         dialog.message_ids.append(message.id)
                         if len(known) % 100 == 0:
                             checkpoint()
+                if examined % 100 == 0:
+                    progress(ProgressEvent(phase, examined, detail=f"{len(found)} matching IDs"))
+            progress(
+                ProgressEvent(phase, examined, detail=f"{len(found)} matching IDs", finished=True)
+            )
             dialog.scan_complete = True
             dialog.last_error = None
             checkpoint()

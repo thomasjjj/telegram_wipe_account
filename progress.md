@@ -62,3 +62,26 @@
 - Retried live login successfully reached Telegram's code prompt. Opened a local
   authentication-only window so the user can enter code/2FA without sharing secrets.
 - No message deletions have been performed. Live inventory awaits local sign-in.
+
+## Live inventory and progress-feedback follow-up
+- User completed local sign-in. Live all-scope inventory (including archives)
+  finished every discovered dialog with zero discovery/scan errors and no fallback
+  scans. Telegram flood waits were observed and respected; no deletions occurred.
+- User requested that message contents not be viewed. Inspected only aggregate
+  counts, targeting/scan metadata and error status; no message text/media inspected.
+- Final inventory rendering hit Windows redirected-output UnicodeEncodeError on a
+  non-Latin chat title. The inventory checkpoint is complete and intact.
+- User explicitly requested a separate agent for progress UI. Delegated scoping,
+  scan/deletion progress, elapsed/rate/ETA feedback and tests, plus the output-encoding fix.
+- Latest authentication-fix CI run 35327028667 passed on all six supported combinations.
+- Live destructive validation and observation from the other participant's client
+  remain unperformed; the account's ordinary history is not a destructive test fixture.
+- Completed Rich progress display for discovery/scoping, message scanning, deletion
+  and verification: elapsed time, measured rates, known-total ETA, unknown-total
+  indicators, visible flood waits, 80-column layout and bounded redirected output.
+- Output encoding fix verified against the actual completed inventory in memory
+  using a Windows cp1252 output stream. No message contents were inspected and no
+  additional Telegram API calls were needed for that check.
+- 52 automated tests pass, including progress events without body access, precise
+  rate/ETA calculations, empty-dialog transitions, private local-filter labels,
+  narrow terminal layout and Unicode output. Ruff lint/format checks pass.

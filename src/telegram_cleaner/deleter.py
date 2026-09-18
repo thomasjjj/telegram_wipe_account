@@ -4,6 +4,7 @@ from typing import Any
 from telethon import errors
 
 from .models import DialogInventory
+from .progress import ProgressCallback, ProgressEvent, quiet_progress
 from .scanner import scan
 from .telegram import Report, request
 
@@ -56,6 +57,7 @@ async def delete_dialog(
     verify: bool,
     checkpoint: Callable[[], None],
     report: Report,
+    progress: ProgressCallback = quiet_progress,
 ) -> None:
     if not dialog.scan_complete:
         return
@@ -67,15 +69,37 @@ async def delete_dialog(
         # messages are recorded by verification and require another confirmation.
         approved = set(dialog.message_ids)
         for attempt in range(3 if verify else 1):
-            for batch in batches(dialog.pending, size):
+            pending = dialog.pending
+            processed = 0
+            progress(
+                ProgressEvent("Deleting IDs", total=len(pending), detail=f"pass {attempt + 1}")
+            )
+            for batch in batches(pending, size):
                 await delete_batch(client, peer, batch, dialog, checkpoint, report)
-                report(
-                    f"Peer {dialog.peer_id}: {len(dialog.deleted_ids)} deletion requests accepted."
+                processed += len(batch)
+                progress(
+                    ProgressEvent(
+                        "Deleting IDs",
+                        processed,
+                        len(pending),
+                        detail=f"pass {attempt + 1}; {len(dialog.failed_ids)} failed IDs",
+                        finished=processed == len(pending),
+                    )
                 )
             if not verify:
                 dialog.delete_complete = not dialog.pending
                 break
-            visible = await scan(client, me, peer, dialog, private_mode, checkpoint, report)
+            visible = await scan(
+                client,
+                me,
+                peer,
+                dialog,
+                private_mode,
+                checkpoint,
+                report,
+                progress,
+                "Verifying messages",
+            )
             # Absence is not proof that our request removed the message: another
             # participant may have removed it while this job was running.
             dialog.absent_ids = sorted(set(dialog.message_ids) - visible - set(dialog.deleted_ids))

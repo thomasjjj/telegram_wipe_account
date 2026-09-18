@@ -3,6 +3,7 @@ from typing import Any
 from telethon import errors, types, utils
 
 from .models import DialogInventory, DialogKind, Job
+from .progress import ProgressCallback, ProgressEvent, quiet_progress
 from .telegram import Report, flood_wait
 
 
@@ -24,8 +25,16 @@ def in_scope(kind: DialogKind, scope: str) -> bool:
     )
 
 
-async def discover(client: Any, me: Any, job: Job, report: Report) -> dict[int, Any]:
+async def discover(
+    client: Any,
+    me: Any,
+    job: Job,
+    report: Report,
+    progress: ProgressCallback = quiet_progress,
+) -> dict[int, Any]:
     peers: dict[int, Any] = {}
+    seen: set[int] = set()
+    progress(ProgressEvent("Discovering dialogs", detail="total unknown until discovery finishes"))
     job.discovery_errors.clear()
     for folder in [0, 1] if job.include_archived else [0]:
         while True:
@@ -37,6 +46,14 @@ async def discover(client: Any, me: Any, job: Job, report: Report) -> dict[int, 
                     except (TypeError, ValueError):
                         job.discovery_errors.append("Unsupported entity without a stable peer ID")
                         continue
+                    seen.add(peer_id)
+                    progress(
+                        ProgressEvent(
+                            "Discovering dialogs",
+                            len(seen),
+                            detail=f"{len(peers)} in scope; folder {folder}",
+                        )
+                    )
                     if peer_id in peers:
                         continue
                     kind = classify(dialog.entity, me.id)
@@ -62,4 +79,12 @@ async def discover(client: Any, me: Any, job: Job, report: Report) -> dict[int, 
             str(me.id), DialogInventory(me.id, "Saved Messages", DialogKind.SELF)
         )
     job.discovery_complete = not job.discovery_errors
+    progress(
+        ProgressEvent(
+            "Discovering dialogs",
+            len(seen),
+            detail=f"{len(peers)} in scope",
+            finished=True,
+        )
+    )
     return peers
