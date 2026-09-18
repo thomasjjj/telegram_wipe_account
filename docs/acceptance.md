@@ -33,6 +33,6 @@ own-only safety/acceptance clauses. Bot replies and other people's group/channel
 messages remain excluded. The tool clears inventory contents using revoke batches;
 it does not promise removal of the empty chat-list entry or server metadata.
 
-Remote CI run 35326519082 passed all six Windows/Linux × Python 3.11/3.12/3.13 jobs
-for commit cf1ecbd. Subsequent local regression coverage adds unknown-entity handling;
-see progress.md for the latest remote result.
+Remote CI run 35326684111 passed all six Windows/Linux × Python 3.11/3.12/3.13 jobs
+for final implementation commit a596b96, including all 41 tests and lint/format checks.
+The user will run the disposable-account manual checks locally; results are pending.

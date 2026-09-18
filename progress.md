@@ -33,6 +33,8 @@
 - Ruff lint and formatting pass; module compiles; CLI help works; pip check passes.
 - Wheel build succeeds. GitHub Actions run 35326519082 passed all six Windows/Linux
   and Python 3.11/3.12/3.13 combinations for cf1ecbd.
+- Final implementation run 35326684111 for a596b96 also passed all six combinations,
+  including all 41 tests and lint/format checks.
 - Final source audit fixed discovery of unexpected entities lacking stable peer IDs;
   a regression test confirms they are reported and skipped instead of aborting.
 - Milestones pushed: scaffold `796726f`; implementation `cfd792c`.
@@ -46,4 +48,5 @@
 - No API credentials or authenticated disposable test session were supplied. Do not
   use a real account's history as a development fixture or claim manual checks passed.
 - Requirement-by-requirement audit is recorded in `docs/acceptance.md`.
-- Await remote checks for the final discovery fix and operator manual-test results.
+- User confirmed they will run the disposable-account manual checks locally.
+  Await those results; no live login/deletion acceptance is claimed yet.
