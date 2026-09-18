@@ -50,3 +50,15 @@
 - Requirement-by-requirement audit is recorded in `docs/acceptance.md`.
 - User confirmed they will run the disposable-account manual checks locally.
   Await those results; no live login/deletion acceptance is claimed yet.
+
+## Live-test follow-up
+- User supplied credentials locally and requested that tests be run here.
+- Automated suite: 41 passed before attempting live authentication.
+- Read-only live run exposed `PhoneMigrateError`: setting Telethon request retries
+  to zero switched data centers without reissuing the authentication request.
+- Enabled two bounded internal retries and added a regression test exercising
+  Telethon's real request loop with a simulated data-center migration.
+- Updated automated suite: 42 tests pass; Ruff checks pass.
+- Retried live login successfully reached Telegram's code prompt. Opened a local
+  authentication-only window so the user can enter code/2FA without sharing secrets.
+- No message deletions have been performed. Live inventory awaits local sign-in.

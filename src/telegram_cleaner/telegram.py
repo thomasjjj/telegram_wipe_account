@@ -17,7 +17,9 @@ def build_client(settings: Settings) -> TelegramClient:
         settings.api_id,
         settings.api_hash,
         flood_sleep_threshold=0,
-        request_retries=0,
+        # Telethon handles data-center migration inside its retry loop. Zero
+        # retries switches DC but never reissues the login request there.
+        request_retries=2,
         raise_last_call_error=True,
         receive_updates=False,
     )
