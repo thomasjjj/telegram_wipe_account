@@ -11,6 +11,7 @@ from telethon import errors
 from .config import load_settings
 from .deleter import delete_dialog
 from .dialogs import discover, in_scope
+from .exclusions import apply_exclusions, parse_peer
 from .logging_utils import configure
 from .models import Job
 from .progress import LiveProgress, ProgressEvent
@@ -36,6 +37,14 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--no-archived", dest="archived", action="store_false")
     result.add_argument("--private-mode", choices=["both", "own"], default=None)
     result.add_argument("--resume", type=Path)
+    result.add_argument(
+        "--exclude-chat",
+        action="append",
+        type=parse_peer,
+        default=[],
+        metavar="PEER_ID_OR_LINK",
+        help="Preserve this chat; repeat for multiple chats",
+    )
     result.add_argument(
         "--batch-size", type=int, choices=range(1, 101), default=100, metavar="1-100"
     )
@@ -69,6 +78,8 @@ def inventory(job: Job) -> None:
     )
     for error in job.discovery_errors:
         console.print(f"Discovery incomplete: {error}")
+    if job.excluded_peer_ids:
+        console.print("Preserved peer IDs: " + ", ".join(map(str, job.excluded_peer_ids)))
 
 
 def choose_resume(directory: Path, account_id: int) -> Path | None:
@@ -141,6 +152,8 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
         job = new_job(me.id, scope, archived, args.private_mode or "both")
         path = new_path(args.state_dir)
 
+    apply_exclusions(job, args.exclude_chat)
+
     def checkpoint() -> None:
         save(job, path)
 
@@ -151,6 +164,8 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
             peers = await discover(client, me, job, report, feedback)
             checkpoint()
             for index, dialog in enumerate(job.dialogs.values(), 1):
+                if dialog.peer_id in job.excluded_peer_ids:
+                    continue
                 feedback(
                     ProgressEvent(
                         "Scoping dialogs",
@@ -220,6 +235,8 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
         checkpoint()
         with feedback:
             for index, dialog in enumerate(job.dialogs.values(), 1):
+                if dialog.peer_id in job.excluded_peer_ids:
+                    continue
                 feedback(
                     ProgressEvent(
                         "Cleaning dialogs",
@@ -241,6 +258,7 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
                         checkpoint,
                         report,
                         feedback,
+                        excluded_peer_ids=frozenset(job.excluded_peer_ids),
                     )
             feedback(
                 ProgressEvent(

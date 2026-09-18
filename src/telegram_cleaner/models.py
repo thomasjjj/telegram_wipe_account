@@ -44,3 +44,4 @@ class Job:
     status: str = "inventory"
     discovery_complete: bool = False
     discovery_errors: list[str] = field(default_factory=list)
+    excluded_peer_ids: list[int] = field(default_factory=list)

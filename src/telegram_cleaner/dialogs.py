@@ -2,6 +2,7 @@ from typing import Any
 
 from telethon import errors, types, utils
 
+from .exclusions import apply_exclusions
 from .models import DialogInventory, DialogKind, Job
 from .progress import ProgressCallback, ProgressEvent, quiet_progress
 from .telegram import Report, flood_wait
@@ -33,6 +34,7 @@ async def discover(
     progress: ProgressCallback = quiet_progress,
 ) -> dict[int, Any]:
     peers: dict[int, Any] = {}
+    apply_exclusions(job, [])
     seen: set[int] = set()
     progress(ProgressEvent("Discovering dialogs", detail="total unknown until discovery finishes"))
     job.discovery_errors.clear()
@@ -45,6 +47,11 @@ async def discover(
                         peer_id = utils.get_peer_id(dialog.entity)
                     except (TypeError, ValueError):
                         job.discovery_errors.append("Unsupported entity without a stable peer ID")
+                        continue
+                    migrated_to = getattr(dialog.entity, "migrated_to", None)
+                    if migrated_to and utils.get_peer_id(migrated_to) in job.excluded_peer_ids:
+                        apply_exclusions(job, [peer_id])
+                    if peer_id in job.excluded_peer_ids:
                         continue
                     seen.add(peer_id)
                     progress(
@@ -73,7 +80,7 @@ async def discover(
             except errors.RPCError as exc:
                 job.discovery_errors.append(f"Folder {folder}: {type(exc).__name__}")
                 break
-    if job.scope == "all":
+    if job.scope == "all" and me.id not in job.excluded_peer_ids:
         peers[me.id] = await client.get_input_entity(me)
         job.dialogs.setdefault(
             str(me.id), DialogInventory(me.id, "Saved Messages", DialogKind.SELF)

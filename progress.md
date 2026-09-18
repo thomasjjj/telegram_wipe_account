@@ -90,3 +90,14 @@
 - Revalidated the clean worktree and successful remote run. Requested a designated
   disposable test chat/message set, or an explicit user decision to finish without
   destructive live validation. No further Telegram requests made during this audit.
+
+## Authorized cleanup with preserved chats
+- User explicitly authorized account-wide cleanup, excluding two specified chats.
+  Their exact peer IDs are kept in local execution state rather than public documentation.
+- Implemented repeatable `--exclude-chat` links/IDs with persistent, additive resume
+  exclusions; protected dialogs are pruned from targeting before discovery/scanning.
+- Migrated legacy histories inherit protection. Deletion requests independently
+  reject protected peer IDs, including mismatched input peers.
+- 58 tests pass, including protected-chat scan/delete/verification exclusion,
+  resume with stale protected inventory rows, link parsing and migrated protection.
+- Live deletion will resume the completed inventory with both exclusions in force.

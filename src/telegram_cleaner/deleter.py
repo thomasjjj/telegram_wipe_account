@@ -1,7 +1,7 @@
 from collections.abc import Callable, Iterator
 from typing import Any
 
-from telethon import errors
+from telethon import errors, utils
 
 from .models import DialogInventory
 from .progress import ProgressCallback, ProgressEvent, quiet_progress
@@ -23,7 +23,10 @@ async def delete_batch(
     dialog: DialogInventory,
     checkpoint: Callable[[], None],
     report: Report,
+    excluded_peer_ids: frozenset[int] = frozenset(),
 ) -> None:
+    if dialog.peer_id in excluded_peer_ids or utils.get_peer_id(peer) in excluded_peer_ids:
+        raise ValueError("Deletion refused for a preserved chat")
     try:
         await request(lambda: client.delete_messages(peer, ids, revoke=True), report)
     except errors.UnauthorizedError:
@@ -33,8 +36,12 @@ async def delete_batch(
     except errors.BadRequestError as exc:
         if len(ids) > 1:
             middle = len(ids) // 2
-            await delete_batch(client, peer, ids[:middle], dialog, checkpoint, report)
-            await delete_batch(client, peer, ids[middle:], dialog, checkpoint, report)
+            await delete_batch(
+                client, peer, ids[:middle], dialog, checkpoint, report, excluded_peer_ids
+            )
+            await delete_batch(
+                client, peer, ids[middle:], dialog, checkpoint, report, excluded_peer_ids
+            )
             return
         dialog.failed_ids = sorted(set(dialog.failed_ids) | set(ids))
         dialog.last_error = type(exc).__name__
@@ -58,7 +65,11 @@ async def delete_dialog(
     checkpoint: Callable[[], None],
     report: Report,
     progress: ProgressCallback = quiet_progress,
+    *,
+    excluded_peer_ids: frozenset[int] = frozenset(),
 ) -> None:
+    if dialog.peer_id in excluded_peer_ids:
+        return
     if not dialog.scan_complete:
         return
     dialog.delete_complete = False
@@ -75,7 +86,9 @@ async def delete_dialog(
                 ProgressEvent("Deleting IDs", total=len(pending), detail=f"pass {attempt + 1}")
             )
             for batch in batches(pending, size):
-                await delete_batch(client, peer, batch, dialog, checkpoint, report)
+                await delete_batch(
+                    client, peer, batch, dialog, checkpoint, report, excluded_peer_ids
+                )
                 processed += len(batch)
                 progress(
                     ProgressEvent(

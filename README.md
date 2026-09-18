@@ -123,6 +123,13 @@ Additional options: `--no-archived`, `--batch-size 1..100`, `--verbose`, and
 `--state-dir PATH`. Run `telegram-cleaner --help` for all flags. Flags configure the
 workflow, but destructive runs still require interactive confirmation.
 
+Preserve selected chats with repeated `--exclude-chat PEER_ID_OR_LINK` options.
+Use a marked Telegram peer ID or a private `https://t.me/c/...` link. Exclusions
+are saved in the checkpoint and remain active on resume without repeating flags.
+Resume may add exclusions but cannot remove existing ones. Protected chats are
+removed from the target inventory and skipped for scanning, deletion and verification;
+discovered migrated basic-group histories inherit their destination's protection.
+
 Exit codes: 0 for a successful inventory, completed request pass, or deliberate abort;
 2 for partial inventory/cleanup; 1 for fatal errors; 130 for interruption. A successful
 request pass with `--no-verify` remains explicitly unverified in the checkpoint.

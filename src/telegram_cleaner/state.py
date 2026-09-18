@@ -42,6 +42,8 @@ def load(path: Path, account_id: int) -> Job:
         raise ValueError("Invalid checkpoint scope")
     if data.get("private_mode") not in {"both", "own"}:
         raise ValueError("Invalid private-chat mode")
+    if any(type(peer) is not int or peer == 0 for peer in data.get("excluded_peer_ids", [])):
+        raise ValueError("Invalid excluded peer ID")
     dialogs = {}
     for key, value in data.pop("dialogs").items():
         value["kind"] = DialogKind(value["kind"])
