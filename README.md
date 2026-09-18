@@ -4,6 +4,21 @@ A Python 3.11+ CLI that inventories accessible Telegram messages, then deletes t
 with Telethon 1.x after typed confirmation. **Deletion is permanent.** Start with a
 dry run and inspect the saved inventory.
 
+> [!WARNING]
+> **Messages in groups you have left or can no longer access may remain visible to others.**
+> This tool discovers your currently accessible dialogs, not every group you have
+> ever posted in. Former groups may be missing from the inventory entirely, and
+> Telegram may reject access or deletion after you leave, are removed, or are banned.
+> A successful cleanup therefore does **not** mean every message you ever posted
+> on Telegram has been removed.
+>
+> Merely being inactive while still a member is not the same as losing access.
+> If you have left a group, restoring access or rejoining may make cleanup possible,
+> but deletion still depends on Telegram's permissions. Otherwise, ask a group
+> administrator to remove the remaining posts. This tool does not automatically
+> rejoin groups. See Telegram's documented
+> [access and deletion errors](https://core.telegram.org/method/channels.deleteMessages).
+
 Private chats default to clearing **both participants' messages**, requesting deletion
 for both users. Groups, supergroups, channels and bots target only messages attributed
 to the signed-in account. Every deletion uses `revoke=True`; the tool never silently

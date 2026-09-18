@@ -131,3 +131,11 @@
   and accurately left incomplete in the local checkpoint. No message contents viewed.
 - No remaining implementation or acceptance work. Retained service entries and
   external copies/server metadata remain within the documented Telegram limitations.
+
+## README limitation clarification
+- Added a prominent GitHub warning immediately below the introduction: messages
+  in former/inaccessible groups can remain visible and may not be inventoried.
+- Distinguished inactivity from loss of membership/access; documented possible
+  rejoining/access restoration and admin assistance without promising deletion.
+- Checked Telegram's official channel/supergroup deletion API error documentation.
+  Documentation-only change; no Telegram account operations or test reruns required.
