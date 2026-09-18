@@ -5,8 +5,10 @@ import pytest
 from telethon import errors
 
 from telegram_cleaner.deleter import delete_dialog
+from telegram_cleaner.dialogs import discover
 from telegram_cleaner.models import DialogInventory, DialogKind
 from telegram_cleaner.scanner import scan
+from telegram_cleaner.state import new_job
 
 
 async def test_filtered_search_fallback_keeps_sender_check():
@@ -98,3 +100,13 @@ async def test_absent_failed_id_is_not_reported_as_our_deletion():
     assert d.verified and not d.pending and not d.failed_ids
     assert d.deleted_ids == []
     assert d.absent_ids == [1]
+
+
+async def test_unknown_entity_does_not_abort_discovery():
+    async def dialogs(**kwargs):
+        yield NS(entity=object())
+
+    job = new_job(1, "groups-channels", False, "both")
+    assert await discover(NS(iter_dialogs=dialogs), NS(id=1), job, Mock()) == {}
+    assert job.discovery_errors == ["Unsupported entity without a stable peer ID"]
+    assert not job.discovery_complete

@@ -32,7 +32,11 @@ async def discover(client: Any, me: Any, job: Job, report: Report) -> dict[int, 
             try:
                 # Keep migrated basic groups: their old history can contain unique messages.
                 async for dialog in client.iter_dialogs(folder=folder, ignore_migrated=False):
-                    peer_id = utils.get_peer_id(dialog.entity)
+                    try:
+                        peer_id = utils.get_peer_id(dialog.entity)
+                    except (TypeError, ValueError):
+                        job.discovery_errors.append("Unsupported entity without a stable peer ID")
+                        continue
                     if peer_id in peers:
                         continue
                     kind = classify(dialog.entity, me.id)

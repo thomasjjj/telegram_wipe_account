@@ -25,13 +25,16 @@
 
 ## Local evidence (2026-09-18)
 - Editable installation succeeds with Telethon 1.45.0 on Python 3.12.6 / Windows.
-- 40 mocked tests pass. Covers classifications, scope, private both/own policy,
+- 41 mocked tests pass. Covers classifications, scope, private both/own policy,
   Saved Messages, batch boundaries, atomic write interruption, account mismatch,
   deletion interruption, flood waits, bounded transient retry, fallback safety,
   permission errors, authentication errors, invalid-ID isolation, verification caps,
   newly discovered messages, zero-deletion CLI dry run and exact confirmation.
 - Ruff lint and formatting pass; module compiles; CLI help works; pip check passes.
-- Packaging wheel build and remote CI verification pending this update.
+- Wheel build succeeds. GitHub Actions run 35326519082 passed all six Windows/Linux
+  and Python 3.11/3.12/3.13 combinations for cf1ecbd.
+- Final source audit fixed discovery of unexpected entities lacking stable peer IDs;
+  a regression test confirms they are reported and skipped instead of aborting.
 - Milestones pushed: scaffold `796726f`; implementation `cfd792c`.
 
 ## Acceptance audit / remaining
@@ -42,4 +45,5 @@
   in both private participants' official clients. Follow `docs/manual-validation.md`.
 - No API credentials or authenticated disposable test session were supplied. Do not
   use a real account's history as a development fixture or claim manual checks passed.
-- Complete packaging/remote CI checks, record results, and push final tracked changes.
+- Requirement-by-requirement audit is recorded in `docs/acceptance.md`.
+- Await remote checks for the final discovery fix and operator manual-test results.
