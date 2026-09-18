@@ -76,6 +76,9 @@ async def delete_dialog(
                 dialog.delete_complete = not dialog.pending
                 break
             visible = await scan(client, me, peer, dialog, private_mode, checkpoint, report)
+            # Absence is not proof that our request removed the message: another
+            # participant may have removed it while this job was running.
+            dialog.absent_ids = sorted(set(dialog.message_ids) - visible - set(dialog.deleted_ids))
             if not visible:
                 dialog.failed_ids.clear()
                 dialog.delete_complete = True

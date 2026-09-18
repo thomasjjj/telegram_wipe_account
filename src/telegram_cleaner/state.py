@@ -48,7 +48,7 @@ def load(path: Path, account_id: int) -> Job:
         dialog = DialogInventory(**value)
         if str(dialog.peer_id) != key:
             raise ValueError("Checkpoint peer mismatch")
-        for ids in (dialog.message_ids, dialog.deleted_ids, dialog.failed_ids):
+        for ids in (dialog.message_ids, dialog.deleted_ids, dialog.failed_ids, dialog.absent_ids):
             if any(type(mid) is not int or mid <= 0 for mid in ids):
                 raise ValueError("Invalid checkpoint message ID")
         dialogs[key] = dialog

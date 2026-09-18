@@ -7,7 +7,9 @@ def configure(directory: Path, verbose: bool) -> logging.Logger:
     directory.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("telegram_cleaner")
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
-    logger.handlers.clear()
+    for existing in logger.handlers[:]:
+        existing.close()
+        logger.removeHandler(existing)
     handler = logging.FileHandler(directory / "cleaner.log", encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(handler)

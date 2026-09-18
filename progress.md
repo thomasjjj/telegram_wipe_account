@@ -1,27 +1,45 @@
-# Progress
+﻿# Progress
 
 ## Requirements and decisions
-- Preserve the supplied brief in `docs/original-brief.md`.
-- User override: private conversations default to inventorying both participants' messages,
-  requesting revocation for everyone. Offer own-messages-only mode. Groups/channels/bots
-  remain strictly sender-attributed; Saved Messages includes all saved history.
-- Never silently fall back to local-only deletion. No live deletion during development.
-- Sequential inventory, atomic resumable checkpoints, typed confirmation, bounded retries,
-  verification, explicit partial failures, secret hygiene, tests and operational README.
+- Original brief preserved in `docs/original-brief.md`.
+- User override: private chats default to both participants' messages, requesting
+  revocation for everyone; `--private-mode own` restores outgoing-only targeting.
+- Groups/channels/bots remain sender-attributed. Saved Messages includes saved forwards.
+- All deletion calls use `revoke=True`; no local-only fallback or live development deletions.
+- Migrated groups retain distinct historical peer namespaces to avoid losing old history.
+- New messages found after confirmation require another confirmation.
 
-## Completed
-- Inspected initial repository and official Telethon 1.45 documentation.
-- Created package/build configuration, secret exclusions and original brief archive.
+## Completed implementation
+- Python 3.11+ package, module and console entry points, environment configuration,
+  missing-credential prompts, optional credential saving, Telethon login lifecycle.
+- Classification and scopes; explicit main/archive discovery and peer deduplication.
+- Sequential sender-filtered scanning, conservative fallback, ID-only inventory.
+- Atomic JSON checkpoints, account-bound resume, per-batch persistence and interruption handling.
+- Rich tables, export/dry run, exact typed confirmation, private-mode visibility.
+- Per-dialog 1–100 ID revocation batches, flood waits, bounded transient retries,
+  bad-ID splitting, permission isolation and authentication-error termination.
+- Three-pass verification limit, newly discovered-ID confirmation barrier, explicit
+  partial reports, distinct accepted-request and externally-absent counts.
+- README, environment example, secret exclusions and disposable-account test procedure.
+- GitHub Actions matrix for Windows/Linux and Python 3.11/3.12/3.13.
 
-## Remaining
-- Implemented configuration, discovery, inventory, state, deletion and CLI.
-- Initial 24 mocked tests pass, including batching, eligibility, flood waits,
-  permission failures, batch splitting, checkpoint interruption, verification and archives.
-- CLI help and module compilation pass; lint issues being resolved.
-- Exercise mocked failure paths and dry-run safety, lint and package checks.
-- Document operation and manual disposable-account validation.
-- Commit and push implementation milestones.
+## Local evidence (2026-09-18)
+- Editable installation succeeds with Telethon 1.45.0 on Python 3.12.6 / Windows.
+- 40 mocked tests pass. Covers classifications, scope, private both/own policy,
+  Saved Messages, batch boundaries, atomic write interruption, account mismatch,
+  deletion interruption, flood waits, bounded transient retry, fallback safety,
+  permission errors, authentication errors, invalid-ID isolation, verification caps,
+  newly discovered messages, zero-deletion CLI dry run and exact confirmation.
+- Ruff lint and formatting pass; module compiles; CLI help works; pip check passes.
+- Packaging wheel build and remote CI verification pending this update.
+- Milestones pushed: scaffold `796726f`; implementation `cfd792c`.
 
-## Validation limits
-- Live Telegram authentication and destructive manual checks require an operator's
-  disposable account; they will not be claimed as performed by automated tests.
+## Acceptance audit / remaining
+- Automated checks establish the local workflow, mock request semantics, and recovery
+  behavior. They do not establish live Telegram behavior or another user's view.
+- Required manual acceptance remains: actual code/2FA login, known-message inventory
+  against Telegram, group/channel permissions, archived history, and disappearance
+  in both private participants' official clients. Follow `docs/manual-validation.md`.
+- No API credentials or authenticated disposable test session were supplied. Do not
+  use a real account's history as a development fixture or claim manual checks passed.
+- Complete packaging/remote CI checks, record results, and push final tracked changes.

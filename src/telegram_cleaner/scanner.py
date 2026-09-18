@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Callable
 from typing import Any
 
@@ -34,6 +35,7 @@ async def scan(
     found: set[int] = set()
     known = set(dialog.message_ids)
     offset = 0
+    retries = 0
     dialog.scan_complete = False
     dialog.last_error = None
     while True:
@@ -51,6 +53,7 @@ async def scan(
                         if len(known) % 100 == 0:
                             checkpoint()
             dialog.scan_complete = True
+            dialog.last_error = None
             checkpoint()
             return found
         except errors.FloodWaitError as exc:
@@ -58,6 +61,13 @@ async def scan(
             await flood_wait(exc, report)
         except errors.UnauthorizedError:
             raise
+        except (errors.ServerError, errors.RpcCallFailError, OSError) as exc:
+            retries += 1
+            dialog.last_error = type(exc).__name__
+            checkpoint()
+            if retries >= 3:
+                raise
+            await asyncio.sleep(retries)
         except (errors.BadRequestError, errors.ForbiddenError) as exc:
             if filtered:
                 filtered = False

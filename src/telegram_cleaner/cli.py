@@ -38,7 +38,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def inventory(job: Job) -> None:
-    table = Table("Type", "Peer ID", "Dialog", "Found", "Pending", "Scan / error")
+    table = Table("Type", "Peer ID", "Dialog", "Found", "Pending", "Failed", "Scan / error")
     for dialog in job.dialogs.values():
         table.add_row(
             dialog.kind.value,
@@ -46,6 +46,7 @@ def inventory(job: Job) -> None:
             dialog.title,
             str(len(dialog.message_ids)),
             str(len(dialog.pending)),
+            str(len(dialog.failed_ids)),
             dialog.last_error or ("scanned" if dialog.scan_complete else "incomplete"),
         )
     console.print(table)
@@ -104,6 +105,11 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
         ):
             if supplied is not None and supplied != saved:
                 raise ValueError("Resume options conflict with the saved job")
+        # A previous verification describes that earlier moment, not this run.
+        job.status = "inventory"
+        for dialog in job.dialogs.values():
+            dialog.verified = False
+            dialog.delete_complete = False
     else:
         scope = args.scope
         if scope is None:
@@ -140,7 +146,7 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
                     peers[dialog.peer_id] = await request(
                         lambda peer_id=dialog.peer_id: client.get_input_entity(peer_id), report
                     )
-                if not dialog.scan_complete:
+                if args.dry_run or not dialog.scan_complete:
                     report(f"Scanning {dialog.kind.value} peer {dialog.peer_id}")
                     await scan(
                         client,
@@ -204,6 +210,12 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
             f"Deletion requests accepted: {sum(len(d.deleted_ids) for d in job.dialogs.values())}; "
             f"verified clean: {sum(d.verified for d in job.dialogs.values())}; "
             f"incomplete/unverified: {sum(not d.verified for d in job.dialogs.values())}"
+        )
+        console.print(
+            f"Dialogs scanned: {sum(d.scan_complete for d in job.dialogs.values())}; "
+            f"failed/still visible IDs: {sum(len(d.failed_ids) for d in job.dialogs.values())}; "
+            f"already absent: {sum(len(d.absent_ids) for d in job.dialogs.values())}; "
+            f"skipped/unscanned dialogs: {sum(not d.scan_complete for d in job.dialogs.values())}"
         )
         if verified:
             console.print("No further matching accessible messages found.")

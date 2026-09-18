@@ -24,10 +24,11 @@ class DialogInventory:
     verified: bool = False
     last_error: str | None = None
     fallback: bool = False
+    absent_ids: list[int] = field(default_factory=list)
 
     @property
     def pending(self) -> list[int]:
-        done = set(self.deleted_ids)
+        done = set(self.deleted_ids) | set(self.absent_ids)
         return [mid for mid in self.message_ids if mid not in done]
 
 
