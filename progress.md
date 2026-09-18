@@ -42,10 +42,9 @@
 ## Acceptance audit / remaining
 - Automated checks establish the local workflow, mock request semantics, and recovery
   behavior. They do not establish live Telegram behavior or another user's view.
-- Live login and all-scope archived-inclusive inventory have now been exercised.
-  Remaining manual acceptance is deletion of designated disposable messages,
-  permission behavior and disappearance in both participants' official clients.
-  Follow `docs/manual-validation.md`; ordinary account history is not a test fixture.
+- Live login, archived-inclusive inventory and explicitly authorized deletion have
+  now been exercised. Verification in the signed-in account is complete. Visibility
+  in another participant's official client has not been independently observed.
 - Requirement-by-requirement audit is recorded in `docs/acceptance.md`.
 - User later supplied credentials and asked for tests to run here. Authentication
   was completed locally; live dry-run results are recorded below. No live deletion
@@ -109,3 +108,13 @@
   and externally absent IDs. Other service entries remain explicitly reported.
 - 60 tests pass with lint/format checks. A read-only verification of the previously
   incomplete dialogs is running with both exclusions enforced.
+- Final read-only verification completed: 794 dialogs verified clean, 28 group
+  membership service entries remain, and 144 cleared-history markers are tracked
+  separately. Every remaining failed ID matches a service-event type from the
+  earlier metadata-only audit; no ordinary messages remain among the failed IDs.
+- Exclusion invariants rechecked: both protected peers persist in exclusions and
+  neither exists in the active job's dialog map. No operations targeted them.
+- Checkpoint remains `incomplete` because Telegram retained those 28 service events;
+  successful revocation requests do not prove erasure from every participant's view.
+- Remote run 35329839048 passed all six platform/Python combinations with 60 tests,
+  Ruff checks and formatting for the final functional change (3b8a3c8).

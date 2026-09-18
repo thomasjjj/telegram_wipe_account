@@ -40,5 +40,10 @@ Live inventory covered all discovered dialogs without scan/discovery errors or
 fallbacks and respected observed flood waits. A final-table Windows encoding error
 was fixed and rendering verified against that saved inventory without viewing
 message contents. No live deletion occurred; both-client deletion validation
-remains pending. Progress feedback and auth migration coverage raise the local
-automated suite to 52 tests; see progress.md for ongoing CI results.
+was subsequently authorized across the account with two protected chats excluded.
+The live run recorded 4,855 accepted deletion IDs; read-only verification confirmed
+794 dialogs clean and identified 28 retained membership service entries. History-
+cleared markers are tracked separately. Both protected peers remained outside the
+active job. No message contents were inspected. The final functional CI run
+35329839048 passed all six environments with 60 tests. Another participant's
+official-client view has not been independently observed; do not claim it was.
