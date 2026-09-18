@@ -12,7 +12,7 @@ Includes automated evidence and the authorized live run; unobserved outcomes are
 | 8: sender filtering/fallback/sequential scans | scanner.py; sender validation, fallback, continuation offset and transient retry tests | Automated checks pass |
 | 9: inventory before typed deletion confirmation | workflow tests for dry run, invalid confirmation and confirmed deletion | Automated checks pass |
 | 10: atomic state/resume/account binding | state.py; atomic replacement failure, account mismatch, interruption and completed-batch resume tests | Automated checks pass |
-| 11: peer batches/revocation/checkpoint/verification | deleter.py; boundary sizes, revoke=True, persisted accepted IDs, three-pass cap, new-ID confirmation tests | Automated and signed-in live checks pass; other-client observation pending |
+| 11: peer batches/revocation/checkpoint/verification | deleter.py; boundary sizes, revoke=True, persisted accepted IDs, three-pass cap, new-ID confirmation tests | Automated and signed-in live checks pass; user confirmed deletion from both participants' clients |
 | 12: flood/auth/permission/transient/bad-ID errors | telegram.py/scanner.py/deleter.py; mocked error and interruption tests | Automated checks pass |
 | 13–15: optimization/models/module ownership | Sequential APIs, cached input peers, ID-only checkpoints, separate config/discovery/scan/delete/state/UI modules | Source audited |
 | 16–18: workflow/flags/dry run | CLI help and end-to-end fake-client tests; export is the saved JSON checkpoint | Automated checks pass |
@@ -20,10 +20,10 @@ Includes automated evidence and the authorized live run; unobserved outcomes are
 | 20: special cases | README explains Saved forwards, bot replies, private override, anonymous posts, migrated-history namespaces; tests cover migrated exclusions and history-cleared markers | Automated checks pass; live metadata audit identifies retained service entries |
 | 21: safety invariants | No deletion path in dry run; typed gate; no revoke=False or history-delete shortcut; safe checkpoint recovery | Automated checks pass; private incoming-message exclusion intentionally superseded |
 | 22: required unit tests | tests cover core behavior, workflow, recovery, progress, login migration and exclusions | 60 tests pass locally and in six CI configurations |
-| 23: manual test plan | manual-validation.md; authorized live account inventory/deletion, metadata-only follow-up | Signed-in checks completed; **other participant's client still unobserved** |
+| 23: manual test plan | manual-validation.md; authorized live account inventory/deletion, metadata-only follow-up | Live cleanup verified; user confirmed cleared private conversation gone on both sides |
 | 24: operational README | README.md includes setup, credentials, examples, scopes, resume, rates, privacy and limits | Implemented |
 | 25–26: style/order/checks | Typed small modules, async sleeps, dataclasses/pathlib, logging metadata, Ruff checks; mocked dry run demonstrated without live deletion | Local checks pass |
-| 27: acceptance criteria | Automated tests and live run establish application behavior, auth, accepted deletion and retained service-event reporting | **Other participant's view not independently verified** |
+| 27: acceptance criteria | Automated tests, live run and user confirmation establish application behavior, auth, revocation and retained service-event reporting | Complete, subject to documented Telegram limits |
 | 28–29: Telethon 1.x and conservative operation | Telethon 1.45.0 installed; official client/error references reviewed; no concurrent scans/deletes or heuristic authorship | Implemented |
 | User: commit regularly, progress.md | Scaffold, implementation and hardening milestones pushed to origin/master; progress.md records outcomes and remaining checks | Ongoing |
 
@@ -45,5 +45,11 @@ The live run recorded 4,855 accepted deletion IDs; read-only verification confir
 794 dialogs clean and identified 28 retained membership service entries. History-
 cleared markers are tracked separately. Both protected peers remained outside the
 active job. No message contents were inspected. The final functional CI run
-35329839048 passed all six environments with 60 tests. Another participant's
-official-client view has not been independently observed; do not claim it was.
+35329839048 passed all six environments with 60 tests. The user subsequently
+confirmed from another participant's Telegram client that the cleared private
+conversation was gone on both sides. No message contents were shared or inspected.
+
+Implementation and acceptance are complete. The cleanup checkpoint intentionally
+remains incomplete for 28 Telegram-retained membership service entries; this is a
+reported platform limitation, not an unimplemented cleanup path or an ordinary
+message-content failure. The two protected chats remain excluded persistently.

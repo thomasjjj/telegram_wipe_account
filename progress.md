@@ -43,8 +43,8 @@
 - Automated checks establish the local workflow, mock request semantics, and recovery
   behavior. They do not establish live Telegram behavior or another user's view.
 - Live login, archived-inclusive inventory and explicitly authorized deletion have
-  now been exercised. Verification in the signed-in account is complete. Visibility
-  in another participant's official client has not been independently observed.
+  now been exercised. Verification in the signed-in account is complete. The user
+  confirmed that the cleared private conversation is gone in both participants' clients.
 - Requirement-by-requirement audit is recorded in `docs/acceptance.md`.
 - User later supplied credentials and asked for tests to run here. Authentication
   was completed locally; live dry-run results are recorded below. No live deletion
@@ -121,3 +121,13 @@
 - Reconciled acceptance table with the completed live run and current test suite.
   Requested a content-free confirmation from another participant's client; this
   is the remaining live observation unavailable from the authenticated session.
+
+## Completion
+- User confirmed the cleared private conversation is gone on both sides.
+- Implementation, automated validation and live acceptance are complete. Changes
+  and evidence have been committed and pushed regularly to GitHub.
+- Final cleanup outcome: 4,855 accepted deletion IDs; 794 dialogs verified clean;
+  both requested chats preserved; 28 membership service entries retained by Telegram
+  and accurately left incomplete in the local checkpoint. No message contents viewed.
+- No remaining implementation or acceptance work. Retained service entries and
+  external copies/server metadata remain within the documented Telegram limitations.
