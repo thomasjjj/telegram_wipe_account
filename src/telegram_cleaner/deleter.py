@@ -115,7 +115,12 @@ async def delete_dialog(
             )
             # Absence is not proof that our request removed the message: another
             # participant may have removed it while this job was running.
-            dialog.absent_ids = sorted(set(dialog.message_ids) - visible - set(dialog.deleted_ids))
+            dialog.absent_ids = sorted(
+                set(dialog.message_ids)
+                - visible
+                - set(dialog.deleted_ids)
+                - set(dialog.ignored_ids)
+            )
             if not visible:
                 dialog.failed_ids.clear()
                 dialog.delete_complete = True

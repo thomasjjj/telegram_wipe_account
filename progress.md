@@ -101,3 +101,11 @@
 - 58 tests pass, including protected-chat scan/delete/verification exclusion,
   resume with stale protected inventory rows, link parsing and migrated protection.
 - Live deletion will resume the completed inventory with both exclusions in force.
+- Live deletion completed with 4,855 accepted IDs. Both protected chats were
+  absent from the active target set throughout; excluded IDs persisted in state.
+- API-type-only audit of 171 remaining IDs found 143 history-cleared markers and
+  28 membership service events; no message text/media inspected.
+- Fixed verification to track history-cleared markers separately from failures
+  and externally absent IDs. Other service entries remain explicitly reported.
+- 60 tests pass with lint/format checks. A read-only verification of the previously
+  incomplete dialogs is running with both exclusions enforced.

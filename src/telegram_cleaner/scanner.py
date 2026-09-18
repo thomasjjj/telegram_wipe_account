@@ -12,6 +12,8 @@ from .telegram import Report, flood_wait
 def eligible(message: Any, me_id: int, kind: DialogKind, private_mode: str) -> bool:
     if isinstance(message, types.MessageEmpty) or not getattr(message, "id", None):
         return False
+    if isinstance(getattr(message, "action", None), types.MessageActionHistoryClear):
+        return False  # Telegram's history-cleared marker is not a surviving message.
     if kind == DialogKind.SELF:
         return True
     if kind == DialogKind.PRIVATE and private_mode == "both":
@@ -58,6 +60,10 @@ async def scan(
             async for message in client.iter_messages(peer, **kwargs):
                 examined += 1
                 offset = message.id
+                if isinstance(getattr(message, "action", None), types.MessageActionHistoryClear):
+                    if message.id not in dialog.ignored_ids:
+                        dialog.ignored_ids.append(message.id)
+                    dialog.failed_ids = [mid for mid in dialog.failed_ids if mid != message.id]
                 if eligible(message, me.id, dialog.kind, private_mode):
                     found.add(message.id)
                     if message.id not in known:

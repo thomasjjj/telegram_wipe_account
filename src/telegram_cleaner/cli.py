@@ -132,6 +132,8 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
         for dialog in job.dialogs.values():
             dialog.verified = False
             dialog.delete_complete = False
+            if dialog.failed_ids:
+                dialog.scan_complete = False
     else:
         scope = args.scope
         if scope is None:
@@ -283,6 +285,7 @@ async def workflow(client: Any, me: Any, args: argparse.Namespace) -> int:
             f"Dialogs scanned: {sum(d.scan_complete for d in job.dialogs.values())}; "
             f"failed/still visible IDs: {sum(len(d.failed_ids) for d in job.dialogs.values())}; "
             f"already absent: {sum(len(d.absent_ids) for d in job.dialogs.values())}; "
+            f"history-cleared markers: {sum(len(d.ignored_ids) for d in job.dialogs.values())}; "
             f"skipped/unscanned dialogs: {sum(not d.scan_complete for d in job.dialogs.values())}"
         )
         if verified:

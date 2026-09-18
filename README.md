@@ -102,6 +102,11 @@ The report distinguishes accepted deletion requests from verified absence and
 incomplete/inaccessible dialogs. Verification sees the signed-in account's view;
 it cannot independently prove what every other participant sees.
 
+Telegram can return `MessageActionHistoryClear` service markers after a history
+has been cleared. These contain no surviving message content and are counted
+separately instead of repeatedly attempting deletion. Other service entries, such
+as group membership events, remain visible in failure reports if Telegram retains them.
+
 ## Rate limits and options
 
 Scanning and deletion are sequential. Telegram flood waits pause for the requested

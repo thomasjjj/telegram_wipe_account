@@ -2,7 +2,7 @@ from types import SimpleNamespace as NS
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from telethon import errors
+from telethon import errors, types
 
 from telegram_cleaner.deleter import delete_dialog
 from telegram_cleaner.dialogs import discover
@@ -110,3 +110,26 @@ async def test_unknown_entity_does_not_abort_discovery():
     assert await discover(NS(iter_dialogs=dialogs), NS(id=1), job, Mock()) == {}
     assert job.discovery_errors == ["Unsupported entity without a stable peer ID"]
     assert not job.discovery_complete
+
+
+async def test_cleared_history_marker_is_not_a_remaining_message_or_external_deletion():
+    async def messages(peer, **kwargs):
+        yield NS(id=1, sender_id=1, action=types.MessageActionHistoryClear())
+
+    d = DialogInventory(2, "p", DialogKind.PRIVATE, [1], failed_ids=[1])
+    client = NS(iter_messages=messages, delete_messages=AsyncMock())
+    found = await scan(client, NS(id=1), 2, d, "both", Mock(), Mock())
+    assert found == set() and d.pending == [] and d.failed_ids == []
+    assert d.ignored_ids == [1]
+    await delete_dialog(client, NS(id=1), 2, d, "both", 100, True, Mock(), Mock())
+    client.delete_messages.assert_not_awaited()
+    assert d.verified and d.absent_ids == [] and d.deleted_ids == []
+
+
+async def test_membership_service_events_are_still_reported_as_remaining():
+    async def messages(peer, **kwargs):
+        yield NS(id=1, sender_id=1, action=types.MessageActionChatJoinedByLink(inviter_id=2))
+
+    d = DialogInventory(-2, "g", DialogKind.GROUP)
+    assert await scan(NS(iter_messages=messages), NS(id=1), -2, d, "both", Mock(), Mock()) == {1}
+    assert d.ignored_ids == []
