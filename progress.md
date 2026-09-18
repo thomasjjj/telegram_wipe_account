@@ -14,7 +14,10 @@
 - Created package/build configuration, secret exclusions and original brief archive.
 
 ## Remaining
-- Implement configuration, discovery, inventory, state, deletion and CLI.
+- Implemented configuration, discovery, inventory, state, deletion and CLI.
+- Initial 24 mocked tests pass, including batching, eligibility, flood waits,
+  permission failures, batch splitting, checkpoint interruption, verification and archives.
+- CLI help and module compilation pass; lint issues being resolved.
 - Exercise mocked failure paths and dry-run safety, lint and package checks.
 - Document operation and manual disposable-account validation.
 - Commit and push implementation milestones.
