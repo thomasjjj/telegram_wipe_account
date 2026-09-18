@@ -42,14 +42,14 @@
 ## Acceptance audit / remaining
 - Automated checks establish the local workflow, mock request semantics, and recovery
   behavior. They do not establish live Telegram behavior or another user's view.
-- Required manual acceptance remains: actual code/2FA login, known-message inventory
-  against Telegram, group/channel permissions, archived history, and disappearance
-  in both private participants' official clients. Follow `docs/manual-validation.md`.
-- No API credentials or authenticated disposable test session were supplied. Do not
-  use a real account's history as a development fixture or claim manual checks passed.
+- Live login and all-scope archived-inclusive inventory have now been exercised.
+  Remaining manual acceptance is deletion of designated disposable messages,
+  permission behavior and disappearance in both participants' official clients.
+  Follow `docs/manual-validation.md`; ordinary account history is not a test fixture.
 - Requirement-by-requirement audit is recorded in `docs/acceptance.md`.
-- User confirmed they will run the disposable-account manual checks locally.
-  Await those results; no live login/deletion acceptance is claimed yet.
+- User later supplied credentials and asked for tests to run here. Authentication
+  was completed locally; live dry-run results are recorded below. No live deletion
+  acceptance is claimed.
 
 ## Live-test follow-up
 - User supplied credentials locally and requested that tests be run here.
@@ -85,3 +85,8 @@
 - 52 automated tests pass, including progress events without body access, precise
   rate/ETA calculations, empty-dialog transitions, private local-filter labels,
   narrow terminal layout and Unicode output. Ruff lint/format checks pass.
+- Remote run 35328176447 passed all six Windows/Linux and Python 3.11/3.12/3.13
+  jobs for d2b93b6, including all 52 tests and lint/format checks.
+- Revalidated the clean worktree and successful remote run. Requested a designated
+  disposable test chat/message set, or an explicit user decision to finish without
+  destructive live validation. No further Telegram requests made during this audit.
